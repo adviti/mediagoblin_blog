@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+from mediagoblin.db.base import Session
 
 def check_blog_slug_used(author_id, slug, ignore_b_id=None):
     from mediagoblin.media_types.blog.models import Blog
@@ -35,15 +35,16 @@ def set_blogpost_state(request, blogpost):
         blogpost.state = u'failed'
 
 def get_all_blogposts_of_blog(request, blog, state=None):
-    blog_posts_list = []
-    blog_post_data = request.db.BlogPostData.query.filter_by(blog=blog.id).all()
-    for each_blog_post_data in blog_post_data:
-        blog_post = each_blog_post_data.get_media_entry
-        if state == None:
-            blog_posts_list.append(blog_post)
-        if blog_post.state == state:
-            blog_posts_list.append(blog_post)
-    blog_posts_list.reverse()
-    return blog_posts_list
-    
- 
+    """Return all blog posts (and metadata) of a blog as query object"""
+    # TODO: I would simply make this function a method of the Blog() class.
+
+    # next line is just providing shortcuts
+    MediaEntry, BlogPostData = request.db.MediaEntry, request.db.BlogPostData
+    blog_posts = Session.query(MediaEntry).join(BlogPostData)\
+	.filter(BlogPostData.blog == blog.id)
+    if state is not None:
+ 	blog_posts = blog_posts.filter(MediaEntry.state==state)
+    # we could return the metadata (blog_posts_meta) here too and save some queries later
+    return blog_posts
+
+

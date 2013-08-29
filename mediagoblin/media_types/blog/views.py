@@ -219,7 +219,7 @@ def blog_dashboard(request):
         return render_404(request)
    
     blog_posts_list = get_all_blogposts_of_blog(request, blog)
-    blog_post_count = len(blog_posts_list)
+    blog_post_count = blog_posts_list.count()
 
     if may_edit_blogpost(request, blog):
         return render_to_response(
